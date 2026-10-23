@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LycéeConnect — Gestion d'Établissement Scolaire (Système Francophone & Togo)</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Barre latérale de navigation -->
+    <aside class="sidebar no-print">
+      <div class="brand">
+        <div class="brand-badge">LC</div>
+        <div>
+          <h1 class="brand-title">LycéeConnect</h1>
+          <p class="brand-subtitle">ERP Lycée • Togo & Francophonie</p>
+        </div>
+      </div>
+
+      <div class="school-card">
+        <div class="flag-bar">
+          <span class="flag-green"></span>
+          <span class="flag-yellow"></span>
+          <span class="flag-red"></span>
+        </div>
+        <p class="school-card-ministry">MEPST • DRE Grand Lomé</p>
+        <h2 class="school-card-name" id="sidebarSchoolName">Lycée Moderne d'Excellence de Lomé</h2>
+        <p class="school-card-year">Année scolaire : <strong id="sidebarSchoolYear">2026-2027</strong></p>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Tableau de Bord</span>
+        </button>
+        <button class="nav-item" data-tab="students">
+          <span class="nav-icon">🎓</span>
+          <span>Élèves & Inscriptions</span>
+        </button>
+        <button class="nav-item" data-tab="grades">
+          <span class="nav-icon">📝</span>
+          <span>Notes & Coefficients (/20)</span>
+        </button>
+        <button class="nav-item" data-tab="bulletins">
+          <span class="nav-icon">📄</span>
+          <span>Bulletins Trimestriels</span>
+        </button>
+        <button class="nav-item" data-tab="tuition">
+          <span class="nav-icon">💳</span>
+          <span>Écolage & Caisse (FCFA)</span>
+        </button>
+        <button class="nav-item" data-tab="schoollife">
+          <span class="nav-icon">🗓️</span>
+          <span>Vie Scolaire & Horaires</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="btnResetDemo" class="btn btn-outline btn-sm full-width">
+          🔄 Réinitialiser les données démo
+        </button>
+      </div>
+    </aside>
+
+    <!-- Contenu principal -->
+    <main class="main-content">
+      <!-- Barre supérieure -->
+      <header class="topbar no-print">
+        <div>
+          <h2 class="page-title" id="pageTitle">Tableau de Bord de Direction</h2>
+          <p class="page-subtitle" id="pageSubtitle">
+            Suivi académique (Séries A4, C4, D), délibérations et gestion financière en FCFA
+          </p>
+        </div>
+
+        <div class="topbar-actions">
+          <label class="trimester-selector">
+            <span>Période :</span>
+            <select id="globalTrimesterSelect">
+              <option value="1">1er Trimestre (Sept. – Déc.)</option>
+              <option value="2">2ème Trimestre (Janv. – Mars)</option>
+            </select>
+          </label>
+          <button class="btn btn-primary" id="btnOpenNewStudentModal">
+            + Inscrire un Élève
+          </button>
+        </div>
+      </header>
+
+      <!-- Notification Toast -->
+      <div id="toastContainer" class="toast-container no-print"></div>
+
+      <!-- SECTION 1 : TABLEAU DE BORD -->
+      <section id="tab-dashboard" class="tab-panel active">
+        <div class="kpi-grid" id="dashboardKpis"></div>
+
+        <div class="grid-2-cols">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Performance par Classe & Série</h3>
+                <p class="text-muted">Moyennes sur 20, taux de réussite (≥ 10/20) et majors de classe</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="classPerformanceTable">
+                <thead>
+                  <tr>
+                    <th>Classe</th>
+                    <th>Série</th>
+                    <th>Effectif</th>
+                    <th>Moy. Classe</th>
+                    <th>Réussite</th>
+                    <th>Major de Classe</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>🏆 Tableau d'Excellence (Top 5 Lycée)</h3>
+                <p class="text-muted">Meilleures moyennes générales coefficientées du trimestre</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="topStudentsTable">
+                <thead>
+                  <tr>
+                    <th>Rang</th>
+                    <th>Élève</th>
+                    <th>Classe</th>
+                    <th>Moyenne /20</th>
+                    <th>Mention</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2 : ÉLÈVES & INSCRIPTIONS -->
+      <section id="tab-students" class="tab-panel">
+        <div class="card">
+          <div class="card-header flex-wrap">
+            <div>
+              <h3>Effectif des Élèves Inscrits</h3>
+              <p class="text-muted">Gestion des dossiers scolaires (Seconde, Première BAC I, Terminale BAC II)</p>
+            </div>
+            <div class="filter-bar">
+              <input
+                type="text"
+                id="studentSearchInput"
+                placeholder="Rechercher un nom ou matricule (ex: LMEL-2026)..."
+                class="input"
+              />
+              <select id="studentClassFilter" class="input">
+                <option value="">Toutes les classes</option>
+              </select>
+              <select id="studentSeriesFilter" class="input">
+                <option value="">Toutes les séries</option>
+                <option value="A4">Série A4 (Lettres)</option>
+                <option value="D">Série D (Sciences & SVT)</option>
+                <option value="C4">Série C4 (Maths & Physique)</option>
+                <option value="CD">2nde CD (Scientifique)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="studentsTable">
+              <thead>
+                <tr>
+                  <th>Matricule</th>
+                  <th>Nom & Prénoms</th>
+                  <th>Sexe</th>
+                  <th>Classe & Série</th>
+                  <th>Moyenne /20</th>
+                  <th>Rang</th>
+                  <th>Écolage (FCFA)</th>
+                  <th>Parent / Tuteur</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3 : SAISIE DES NOTES & COEFFICIENTS -->
+      <section id="tab-grades" class="tab-panel">
+        <div class="card">
+          <div class="card-header flex-wrap">
+            <div>
+              <h3>Saisie des Notes (/20) & Calcul des Coefficients</h3>
+              <p class="text-muted">
+                Formule officielle : Moy. Classe = (Interro + Devoir) / 2 • Moy. Trimestrielle = (Moy. Classe + Composition) / 2
+              </p>
+            </div>
+            <div class="filter-bar">
+              <label>
+                <strong>Élève :</strong>
+                <select id="gradesStudentSelect" class="input"></select>
+              </label>
+            </div>
+          </div>
+
+          <div id="gradesSummaryBanner" class="summary-banner"></div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="gradesEditorTable">
+              <thead>
+                <tr>
+                  <th>Matière</th>
+                  <th>Catégorie</th>
+                  <th>Coef.</th>
+                  <th>Interro (/20)</th>
+                  <th>Devoir (/20)</th>
+                  <th>Moy. Classe</th>
+                  <th>Composition (/20)</th>
+                  <th>Moyenne /20</th>
+                  <th>Points (Moy×Coef)</th>
+                  <th>Appréciation</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4 : BULLETINS SCOLAIRES TRIMESTRIELS -->
+      <section id="tab-bulletins" class="tab-panel">
+        <div class="card no-print" style="margin-bottom: 1.25rem;">
+          <div class="card-header flex-wrap">
+            <div>
+              <h3>Générateur de Bulletin Trimestriel Officiel</h3>
+              <p class="text-muted">Sélectionnez un élève pour prévisualiser ou imprimer son bulletin de notes</p>
+            </div>
+            <div class="filter-bar">
+              <select id="bulletinStudentSelect" class="input"></select>
+              <button class="btn btn-primary" id="btnPrintBulletin">
+                🖨️ Imprimer / Exporter en PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feuille A4 du Bulletin Scolaire -->
+        <div id="bulletinSheet" class="bulletin-sheet"></div>
+      </section>
+
+      <!-- SECTION 5 : ÉCOLAGE & COMPTABILITÉ (FCFA) -->
+      <section id="tab-tuition" class="tab-panel">
+        <div class="grid-3-cols">
+          <div class="card">
+            <h3>Encaisser un Règlement d'Écolage</h3>
+            <p class="text-muted" style="margin-bottom: 1rem;">
+              Émission immédiate d'un reçu de caisse en Francs CFA (FCFA)
+            </p>
+            <form id="tuitionPaymentForm" class="form-stack">
+              <div class="form-group">
+                <label>Élève concerné</label>
+                <select id="tuitionStudentSelect" class="input" required></select>
+              </div>
+              <div class="form-group">
+                <label>Montant versé (FCFA)</label>
+                <input type="number" id="tuitionAmountInput" class="input" min="1000" step="500" value="25000" required />
+              </div>
+              <div class="form-group">
+                <label>Mode de règlement</label>
+                <select id="tuitionMethodSelect" class="input">
+                  <option value="TMoney (Togocom)">TMoney (Togocom)</option>
+                  <option value="Flooz (Moov Africa)">Flooz (Moov Africa)</option>
+                  <option value="Espèces (Guichet Intendance)">Espèces (Guichet Intendance)</option>
+                  <option value="Versement Bancaire (Orabank / Ecobank)">Versement Bancaire (Orabank / Ecobank)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Motif / Tranche</label>
+                <select id="tuitionTrancheSelect" class="input">
+                  <option value="1ère Tranche (Inscription)">1ère Tranche (Inscription)</option>
+                  <option value="2ème Tranche (Janvier)">2ème Tranche (Janvier)</option>
+                  <option value="3ème Tranche (Solde Mars)">3ème Tranche (Solde Mars)</option>
+                  <option value="Scolarité Complète">Scolarité Complète</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary full-width">
+                ✅ Valider & Générer le Reçu
+              </button>
+            </form>
+          </div>
+
+          <div class="card span-2">
+            <div class="card-header">
+              <div>
+                <h3>Situation d'Écolage par Élève (FCFA)</h3>
+                <p class="text-muted">Barème annuel : 2nde (85 000 FCFA) • 1ère (95 000 FCFA) • Terminale (110 000 FCFA)</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="tuitionSummariesTable">
+                <thead>
+                  <tr>
+                    <th>Élève</th>
+                    <th>Classe</th>
+                    <th>Total Dû</th>
+                    <th>Payé</th>
+                    <th>Reste à Payer</th>
+                    <th>Progression</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.25rem;">
+          <div class="card-header">
+            <h3>Journal des Reçus de Caisse Émis</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="tuitionPaymentsTable">
+              <thead>
+                <tr>
+                  <th>N° Reçu</th>
+                  <th>Date</th>
+                  <th>Élève</th>
+                  <th>Classe</th>
+                  <th>Tranche / Motif</th>
+                  <th>Mode de Paiement</th>
+                  <th>Montant (FCFA)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6 : VIE SCOLAIRE, CORPS ENSEIGNANT & EMPLOI DU TEMPS -->
+      <section id="tab-schoollife" class="tab-panel">
+        <div class="grid-2-cols">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Suivi d'Assiduité (Absences & Retards)</h3>
+                <p class="text-muted">Registre de la Surveillance Générale</p>
+              </div>
+            </div>
+            <form id="attendanceForm" class="inline-form" style="margin-bottom: 1rem;">
+              <select id="attendanceStudentSelect" class="input" required></select>
+              <select id="attendanceTypeSelect" class="input">
+                <option value="Absence">Absence</option>
+                <option value="Retard">Retard</option>
+              </select>
+              <input type="number" id="attendanceHoursInput" class="input" min="1" max="8" value="2" style="width: 80px;" title="Heures" />
+              <input type="text" id="attendanceReasonInput" class="input" placeholder="Motif ou matière..." required />
+              <label class="checkbox-label">
+                <input type="checkbox" id="attendanceJustifiedInput" /> Justifiée
+              </label>
+              <button type="submit" class="btn btn-primary btn-sm">+ Signaler</button>
+            </form>
+            <div class="table-responsive">
+              <table class="data-table" id="attendanceTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Élève</th>
+                    <th>Classe</th>
+                    <th>Type</th>
+                    <th>Durée</th>
+                    <th>Motif</th>
+                    <th>État</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3>Corps Enseignant du Lycée</h3>
+                <p class="text-muted">Professeurs certifiés (CAPES) et agrégés par discipline</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="teachersTable">
+                <thead>
+                  <tr>
+                    <th>Enseignant</th>
+                    <th>Discipline</th>
+                    <th>Grade</th>
+                    <th>Classes tenues</th>
+                    <th>Contact</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.25rem;">
+          <div class="card-header">
+            <div>
+              <h3>Emploi du Temps Hebdomadaire — Classes d'Examen (Terminales D, A4, C4)</h3>
+              <p class="text-muted">Horaires officiels : Matin (07h00 – 11h00) • Après-midi (15h00 – 17h00)</p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="timetableTable">
+              <thead>
+                <tr>
+                  <th>Jour</th>
+                  <th>Créneau Horaire</th>
+                  <th>Terminale D (Sciences)</th>
+                  <th>Terminale A4 (Lettres)</th>
+                  <th>Terminale C4 (Maths & Physique)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODALE D'INSCRIPTION D'UN NOUVEL ÉLÈVE -->
+  <div id="newStudentModal" class="modal-backdrop hidden no-print">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🎓 Nouvelle Inscription d'Élève</h3>
+        <button id="btnCloseNewStudentModal" class="btn-close">&times;</button>
+      </div>
+      <form id="newStudentForm" class="form-grid">
+        <div class="form-group">
+          <label>Nom de famille *</label>
+          <input type="text" id="nsLastName" class="input" placeholder="Ex: MENSAH" required />
+        </div>
+        <div class="form-group">
+          <label>Prénoms *</label>
+          <input type="text" id="nsFirstName" class="input" placeholder="Ex: Kossi Jean-Luc" required />
+        </div>
+        <div class="form-group">
+          <label>Sexe</label>
+          <select id="nsGender" class="input">
+            <option value="M">Masculin (M)</option>
+            <option value="F">Féminin (F)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date de naissance</label>
+          <input type="date" id="nsBirthDate" class="input" value="2008-06-15" />
+        </div>
+        <div class="form-group">
+          <label>Lieu de naissance</label>
+          <input type="text" id="nsBirthPlace" class="input" value="Lomé" />
+        </div>
+        <div class="form-group">
+          <label>Classe & Série d'affectation</label>
+          <select id="nsClassId" class="input">
+            <option value="TLE-D">Terminale D (Série D)</option>
+            <option value="TLE-C4">Terminale C4 (Série C4)</option>
+            <option value="TLE-A4">Terminale A4 (Série A4)</option>
+            <option value="1ERE-D">Première D (BAC I)</option>
+            <option value="1ERE-A4">Première A4 (BAC I)</option>
+            <option value="2NDE-CD">Seconde CD (Scientifique)</option>
+            <option value="2NDE-A4">Seconde A4 (Littéraire)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quartier de résidence</label>
+          <input type="text" id="nsNeighborhood" class="input" placeholder="Ex: Agoè-Nyivé, Lomé" value="Tokoin, Lomé" />
+        </div>
+        <div class="form-group">
+          <label>Nom du Parent / Tuteur</label>
+          <input type="text" id="nsGuardianName" class="input" placeholder="Ex: M. Kodjo Mensah" required />
+        </div>
+        <div class="form-group">
+          <label>Téléphone du Parent</label>
+          <input type="text" id="nsGuardianPhone" class="input" value="+228 90 00 11 22" required />
+        </div>
+        <div class="form-group">
+          <label>Versement initial Écolage (FCFA)</label>
+          <input type="number" id="nsInitialDeposit" class="input" value="55000" min="0" step="1000" />
+        </div>
+        <div class="modal-actions span-2">
+          <button type="button" id="btnCancelNewStudent" class="btn btn-outline">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer l'Inscription</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "lycee-connect",
+  "version": "1.0.0",
+  "description": "Système complet de gestion d'établissement scolaire (Lycée - Système éducatif francophone & togolais : Séries A4, C4, D, Notes /20, Coefficients, Bulletins trimestriels, Écolage FCFA, Vie scolaire)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node -e \"require('./src/services/store').resetStore(); console.log('Base de données réinitialisée avec succès !');\"",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "school-management",
+    "erp-scolaire",
+    "lycee",
+    "togo",
+    "systeme-francais",
+    "bulletins-scolaires",
+    "education",
+    "afrique-francophone",
+    "nodejs",
+    "express"
+  ],
+  "author": "Josuebriefly (@contact0briefly-png)",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
